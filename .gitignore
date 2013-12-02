@@ -1,0 +1,7 @@
+# Compiled objects
+*.o
+ch8vm
+
+# Dumps
+*.dump
+*.core
