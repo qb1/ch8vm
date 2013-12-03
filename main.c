@@ -40,13 +40,12 @@ int main(int argc, char *argv[])
 	// LLVMPassManagerRef pass_mgr;
 	// ExistingModuleProvider mp;
 	LLVMExecutionEngineRef exec_engine;
-	LLVMMemoryBufferRef buffer;
-	LLVMValueRef test_func;
+	LLVMMemoryBufferRef buffer;	
 
 	LLVMInitializeNativeTarget();
 	LLVMLinkInJIT ();
 
-	if( LLVMCreateMemoryBufferWithContentsOfFile("ch8vm.ll", &buffer, &err) ) 
+	if( LLVMCreateMemoryBufferWithContentsOfFile("ch8vmlib.bc", &buffer, &err) ) 
 	{
 		fprintf (stderr, "error: %s\n", err);
     	LLVMDisposeMessage (err);
@@ -70,9 +69,27 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    test_func = LLVMGetNamedFunction( module, "ch8_test");
-
+    // Simple call
+    LLVMValueRef test_func = LLVMGetNamedFunction( module, "ch8_test");
     LLVMRunFunction( exec_engine, test_func, 0, NULL );
+
+    // Call with arguments
+    LLVMValueRef init_ch8 = LLVMGetNamedFunction( module, "ch8_InitVM");
+    LLVMGenericValueRef args[2];
+    args[0] = LLVMCreateGenericValueOfPointer( &state );
+    args[1] = LLVMCreateGenericValueOfPointer( &instr );
+	LLVMRunFunction( exec_engine, init_ch8, 2, args );
+
+	/* Read file contents into buffer */
+	fseek(file_program, 0, SEEK_END);
+	fileLen=ftell(file_program);
+	fseek(file_program, 0, SEEK_SET);
+	fread(state.M+0x200, fileLen, 1, file_program);
+	fclose(file_program);
+
+	// Simple call
+    LLVMValueRef start_func = LLVMGetNamedFunction( module, "ch8_StartVM");
+    LLVMRunFunction( exec_engine, start_func, 0, NULL );
 
    	return 0;
 

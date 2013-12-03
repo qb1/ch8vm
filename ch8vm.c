@@ -69,6 +69,8 @@ void ch8_InitVM( CH8_STATE* state, CH8_INSTR* instr )
 
 	srand (time(NULL));
 
+	printf( "Called!\n" );
+
 	/* OS specific init */
 	ch8_OS_Init();
 }

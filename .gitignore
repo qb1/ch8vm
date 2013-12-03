@@ -1,5 +1,6 @@
 # Compiled objects
 *.o
+*.bc
 ch8vm
 
 # Dumps
