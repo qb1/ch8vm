@@ -3,11 +3,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <ctype.h>
+#include <assert.h>
+#include <limits.h>
+#include <stdarg.h>
 
 #include "ch8vm.h"
 
 /* TODO 
-	* better time management
 	* sound
 	* S-CHIP
 */
@@ -68,6 +71,11 @@ void ch8_InitVM( CH8_STATE* state, CH8_INSTR* instr )
 
 	/* OS specific init */
 	ch8_OS_Init();
+}
+
+void ch8_test()
+{
+	printf( "Test function!\n" );
 }
 
 void ch8_StartVM()

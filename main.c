@@ -2,6 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <llvm-c/Core.h>
+#include <llvm-c/Target.h>
+#include <llvm-c/ExecutionEngine.h>
+#include <llvm-c/BitReader.h>
+
 #include "ch8vm.h"
 
 int main(int argc, char *argv[])
@@ -26,17 +31,76 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	/* Init VM */
-	ch8_InitVM( &state, &instr );
+	// Begin exp.
 
-	/* Read file contents into buffer */
-	fseek(file_program, 0, SEEK_END);
-	fileLen=ftell(file_program);
-	fseek(file_program, 0, SEEK_SET);
-	fread(state.M+0x200, fileLen, 1, file_program);
-	fclose(file_program);
+	char *err;
 
-	ch8_StartVM();
+	LLVMModuleRef module;
+	// LLVMBuilderRef builder;
+	// LLVMPassManagerRef pass_mgr;
+	// ExistingModuleProvider mp;
+	LLVMExecutionEngineRef exec_engine;
+	LLVMMemoryBufferRef buffer;
+	LLVMValueRef test_func;
+
+	LLVMInitializeNativeTarget();
+	LLVMLinkInJIT ();
+
+	if( LLVMCreateMemoryBufferWithContentsOfFile("ch8vm.ll", &buffer, &err) ) 
+	{
+		fprintf (stderr, "error: %s\n", err);
+    	LLVMDisposeMessage (err);
+    	return 1;
+    }
+
+    if( LLVMParseBitcode(buffer, &module, &err) )
+    {
+    	fprintf (stderr, "error: %s\n", err);
+    	LLVMDisposeMessage (err);
+    	return 1;
+    }
+
+    // VM loaded!
+   	// LLVMDumpModule( module );   
+
+   	if(LLVMCreateExecutionEngineForModule(&exec_engine, module, &err) )
+   	{
+        fprintf (stderr, "error: %s\n", err);
+        LLVMDisposeMessage (err);
+        return 1;
+    }
+
+    test_func = LLVMGetNamedFunction( module, "ch8_test");
+
+    LLVMRunFunction( exec_engine, test_func, 0, NULL );
+
+   	return 0;
+
+	// module = LLVMModuleCreateWithName ("CHIP-8 JIT");
+ //    builder = LLVMCreateBuilder ();
+
+ //    LLVMInitializeNativeTarget ();
+ //    LLVMLinkInJIT ();    
+
+ //    if (LLVMCreateExecutionEngineForModule (&exec_engine, module, &err)) {
+ //        fprintf (stderr, "error: %s\n", err);
+ //        LLVMDisposeMessage (err);
+ //        return 1;
+ //    }
+
+
+
+	// /* Init VM */
+	// ch8_InitVM( &state, &instr );
+
+	// /* Read file contents into buffer */
+	// fseek(file_program, 0, SEEK_END);
+	// fileLen=ftell(file_program);
+	// fseek(file_program, 0, SEEK_SET);
+	// fread(state.M+0x200, fileLen, 1, file_program);
+	// fclose(file_program);
+
+	// ch8_StartVM();
 
 	return 0;
 }
