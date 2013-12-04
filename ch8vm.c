@@ -54,18 +54,28 @@ unsigned char _ch8Font[] = {
 CH8_STATE* ch8_State;
 CH8_INSTR* ch8_Instr;
 
-void ch8_InitVM( CH8_STATE* state, CH8_INSTR* instr )
+static CH8_STATE global_state = { .I=1 };
+static CH8_INSTR global_instr;
+
+int main()
 {
-	ch8_State = state;
-	ch8_Instr = instr;
+	ch8_InitVM();
+	ch8_StartVM();
 
-	memset( state, 0, sizeof(CH8_STATE) );
+	return 0;
+}
+
+void ch8_InitVM()
+{
+	ch8_State = &global_state;
+	ch8_Instr = &global_instr;
+
 	memset( ch8_Instr, 0, sizeof(CH8_INSTR) );
-	memcpy( state->M, _ch8Font, sizeof( _ch8Font ) );
+	memcpy( ch8_State->M, _ch8Font, sizeof( _ch8Font ) );
 
-	state->PC = 0x200;
-	state->StackPointer = state->CallStack;
-	state->PausedOnKey = -1;
+	ch8_State->PC = 0x200;
+	ch8_State->StackPointer = ch8_State->CallStack;
+	ch8_State->PausedOnKey = -1;
 
 	srand (time(NULL));
 
@@ -73,11 +83,6 @@ void ch8_InitVM( CH8_STATE* state, CH8_INSTR* instr )
 
 	/* OS specific init */
 	ch8_OS_Init();
-}
-
-void ch8_test()
-{
-	printf( "Test function!\n" );
 }
 
 void ch8_StartVM()

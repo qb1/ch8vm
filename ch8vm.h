@@ -19,14 +19,14 @@
 typedef struct
 {
 	/* Memory */
+	uint8_t M[CH8_MEMORY_SIZE];			// Must stay FIRST!
+	uint8_t Screen[CH8_SCREEN_SIZE];
+
 	uint16_t I;
 	uint8_t  V[0x10];
 
 	uint8_t SoundTimer;
-	uint8_t DelayTimer;
-
-	uint8_t M[CH8_MEMORY_SIZE];
-	uint8_t Screen[CH8_SCREEN_SIZE];
+	uint8_t DelayTimer;	
 
 	/* Control Flow */
 	uint16_t PC;
@@ -45,7 +45,7 @@ extern CH8_INSTR* ch8_Instr;
 
 typedef void (*CH8_CALL)() ;
 
-void ch8_InitVM( CH8_STATE* state, CH8_INSTR* instr );
+void ch8_InitVM( );
 void ch8_execInstr();
 void ch8_StartVM();
 void ch8_printState();
