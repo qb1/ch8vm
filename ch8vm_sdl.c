@@ -93,7 +93,7 @@ int ch8_OS_ReadKeys()
 	return ret;
 }
 
-void ch8_OS_PrintScreen()
+void ch8_OS_PrintScreen(int x, int y, int w, int h)
 {
 	SDL_Rect rect;
 	unsigned char* scr;
@@ -102,20 +102,20 @@ void ch8_OS_PrintScreen()
 
 	// ch8_printState();
 
-	SDL_FillRect( screen, NULL, SDL_MapRGB( screen->format, 0, 0, 0 ) );
-
-	rect.y = 0;
-	for( int i=0; i < CH8_SCREEN_HEIGHT; ++i )
+	rect.y = y*PIX_SIZE;
+	for( int i=y; i < CH8_SCREEN_HEIGHT && i < y+h; ++i )
 	{
 		scr = ch8_State->Screen + i * (unsigned char)(CH8_SCREEN_WIDTH/8);
 		
-		rect.x = 0;
-		for( int j=0; j < CH8_SCREEN_WIDTH; ++j )
+		rect.x = x*PIX_SIZE;
+		for( int j=x; j < CH8_SCREEN_WIDTH && j<x+w; ++j )
 		{
 			if( scr[j/8] & 1<<(j%8) )
 			{
 				rect.x = j*PIX_SIZE;
 				SDL_FillRect( screen, &rect, SDL_MapRGB( screen->format, 0, 255, 0 ) );	
+			}else{
+				SDL_FillRect( screen, &rect, SDL_MapRGB( screen->format, 0, 0, 0 ) );	
 			}
 
 			rect.x += PIX_SIZE;
