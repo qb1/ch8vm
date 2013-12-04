@@ -398,7 +398,7 @@ void ch8_SPRITE ()
 			_V[0xF]=1;
 	}
 
-	ch8_OS_PrintScreen();
+	ch8_OS_PrintScreen(_V[_X], _V[_Y], 8, _Z);
 }
 
 
