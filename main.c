@@ -16,8 +16,7 @@ int main(int argc, char *argv[])
 	FILE* file_program=NULL;
 	unsigned long fileLen;	
 	
-	CH8_STATE state;
-	CH8_INSTR instr;
+	uint8_t *rom_memory;
 
 	if( argc != 2 )
 	{
@@ -37,7 +36,9 @@ int main(int argc, char *argv[])
 	fseek(file_program, 0, SEEK_END);
 	fileLen=ftell(file_program);
 	fseek(file_program, 0, SEEK_SET);
-	fread(state.M+0x200, fileLen, 1, file_program);
+
+	rom_memory = malloc(fileLen);
+	fread(rom_memory, fileLen, 1, file_program);
 	fclose(file_program);
 
 	// Begin exp.
@@ -49,8 +50,8 @@ int main(int argc, char *argv[])
 	LLVMExecutionEngineRef exec_engine;
 	LLVMMemoryBufferRef buffer;	
 
-	LLVMInitializeNativeTarget();
-	LLVMLinkInJIT ();
+	// LLVMInitializeNativeTarget();
+	// LLVMLinkInJIT ();
 
 	if( LLVMCreateMemoryBufferWithContentsOfFile("ch8vmlib.bc", &buffer, &err) ) 
 	{
@@ -67,54 +68,24 @@ int main(int argc, char *argv[])
     }
 
     // VM loaded!
-    // LLVMDumpModule( module ); 
 
-   	// ArrayType* ArrayTy_5 = ArrayType::get(IntegerType::get(mod->getContext(), 8), 16);
-   	// ArrayType* ArrayTy_4 = ArrayType::get(IntegerType::get(mod->getContext(), 8), 256);
-   	// ArrayType* ArrayTy_6 = ArrayType::get(IntegerType::get(mod->getContext(), 16), 16);
-   	// PointerType* PointerTy_7 = PointerType::get(IntegerType::get(mod->getContext(), 16), 0);
- 	
    	// Add the global state's initialiser
    	LLVMContextRef context = LLVMGetModuleContext(module);
-   	printf( "before\n" );
-   	LLVMValueRef state_var = LLVMGetNamedGlobal( module, "global_state" );
-   	LLVMTypeRef state_type = LLVMGetTypeByName( module, "struct.CH8_STATE" );
-
-   	LLVMTypeRef state_type_int8x16 = LLVMArrayType( LLVMInt8TypeInContext(context), 16);
-   	LLVMTypeRef state_type_int8x256 = LLVMArrayType( LLVMInt8TypeInContext(context), 256);
-   	LLVMTypeRef state_type_int16x16 = LLVMArrayType( LLVMInt16TypeInContext(context), 16);
-   	LLVMTypeRef state_type_int8x3 = LLVMArrayType( LLVMInt8TypeInContext(context), 3);
-   	LLVMTypeRef state_type_p_int16 =  LLVMPointerType( LLVMInt16TypeInContext(context), 0);
-
-   	LLVMValueRef state_const_fields[] = 
-   	{
-   		// LLVMConstStringInContext( context, (char*)state.M, sizeof(state.M), 1 ),
-   		LLVMConstNull( LLVMArrayType( LLVMInt8TypeInContext(context), 0x10000) ),
-   		LLVMConstNull( state_type_int8x256 ),
-
-   		LLVMConstInt( LLVMInt16TypeInContext(context), 1, 0 ),
-   		LLVMConstNull( state_type_int8x16 ),
-
-   		LLVMConstInt( LLVMInt8TypeInContext(context), 0, 0 ),
-   		LLVMConstInt( LLVMInt8TypeInContext(context), 0, 0 ),
-
-   		LLVMConstInt( LLVMInt16TypeInContext(context), 0, 0 ),
-   		LLVMConstNull( state_type_int16x16 ),
-   		LLVMConstPointerNull( state_type_p_int16 ),
-   		LLVMConstInt( LLVMInt8TypeInContext(context), 0, 0 ),
-
-   		LLVMConstNull( state_type_int8x16 ),
-   		LLVMGetUndef( state_type_int8x3 )
-   	};
+   	LLVMTypeRef rommem_type = LLVMArrayType( LLVMInt8TypeInContext(context), fileLen);
    	
-	LLVMValueRef state_const = LLVMConstNamedStruct( state_type, state_const_fields, sizeof(state_const_fields)/sizeof(*state_const_fields) );
-	LLVMSetInitializer( state_var, state_const );
+   	LLVMValueRef rommem_var = LLVMGetNamedGlobal( module, "rom_memory" );
+   	LLVMDeleteGlobal( rommem_var );
+   	rommem_var = LLVMAddGlobal( module, rommem_type, "rom_memory");
+   	LLVMSetInitializer( rommem_var, LLVMConstStringInContext( context, (char*)rom_memory, fileLen, 1 ) );
 
+   	LLVMValueRef romsize_var = LLVMGetNamedGlobal( module, "rom_memory_size" );
+   	LLVMSetInitializer( romsize_var, LLVMConstInt( LLVMInt16TypeInContext(context), fileLen, 0 ) );   	
+   	
 	//LLVMDumpModule( module ); 
 
-	LLVMPassManagerRef passmgr = LLVMCreatePassManager( );
-	LLVMRunPassManager( passmgr, module );
-	LLVMDisposePassManager( passmgr );
+	// LLVMPassManagerRef passmgr = LLVMCreatePassManager( );
+	// LLVMRunPassManager( passmgr, module );
+	// LLVMDisposePassManager( passmgr );
 
 	LLVMWriteBitcodeToFile( module, "output.bc" );
 
@@ -126,8 +97,8 @@ int main(int argc, char *argv[])
     // }
 
 	// Write to file
-	// if( LLVMVerifyModule( module, LLVMPrintMessageAction, NULL ) )
-	// 	exit(1);
+	if( LLVMVerifyModule( module, LLVMPrintMessageAction, NULL ) )
+		exit(1);
 
     
 

@@ -15,7 +15,7 @@ SDL_Surface* screen = NULL;
 
 void ch8_OS_Init()
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 	{
 		printf( "SDL Init error: %s\n", SDL_GetError() );
 		return;
@@ -80,15 +80,15 @@ int ch8_OS_ReadKeys()
 		SDLK_KP_PLUS,
 	};
 
-	keystate = SDL_GetKeyState(NULL);
+	// keystate = SDL_GetKeyState(NULL);
 
-	for( i=0; i < sizeof(value_per_key)/sizeof(*value_per_key); ++i )
-	{
-		_KEY[i] = keystate[value_per_key[i]]?1:0;
+	// for( i=0; i < sizeof(value_per_key)/sizeof(*value_per_key); ++i )
+	// {
+	// 	_KEY[i] = keystate[value_per_key[i]]?1:0;
 		
-		if( _KEY[i] )
-			ret = i;
-	}
+	// 	if( _KEY[i] )
+	// 		ret = i;
+	// }
 
 	return ret;
 }

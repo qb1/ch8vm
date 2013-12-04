@@ -10,6 +10,10 @@
 
 #include "ch8vm.h"
 
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
+
 /* TODO 
 	* sound
 	* S-CHIP
@@ -54,13 +58,21 @@ unsigned char _ch8Font[] = {
 CH8_STATE* ch8_State;
 CH8_INSTR* ch8_Instr;
 
-static CH8_STATE global_state = { .I=1 };
+static const uint8_t rom_memory[] = { 0x00 };
+static uint16_t rom_memory_size=1;
+
+static CH8_STATE global_state;
 static CH8_INSTR global_instr;
 
 int main()
 {
 	ch8_InitVM();
+
+#ifdef EMSCRIPTEN
+	emscripten_set_main_loop(ch8_StartVM, 120, 0);
+#else
 	ch8_StartVM();
+#endif
 
 	return 0;
 }
@@ -70,16 +82,17 @@ void ch8_InitVM()
 	ch8_State = &global_state;
 	ch8_Instr = &global_instr;
 
+	memset( ch8_State, 0, sizeof(CH8_STATE) );
 	memset( ch8_Instr, 0, sizeof(CH8_INSTR) );
+	
 	memcpy( ch8_State->M, _ch8Font, sizeof( _ch8Font ) );
+	memcpy( ch8_State->M+0x200, rom_memory, rom_memory_size );
 
 	ch8_State->PC = 0x200;
 	ch8_State->StackPointer = ch8_State->CallStack;
 	ch8_State->PausedOnKey = -1;
 
 	srand (time(NULL));
-
-	printf( "Called!\n" );
 
 	/* OS specific init */
 	ch8_OS_Init();
@@ -88,13 +101,14 @@ void ch8_InitVM()
 void ch8_StartVM()
 {
 	int key;
-	uint32_t prev_tick_time, tick_time;
+	static uint32_t prev_tick_time=0, tick_time=0;
 
-	prev_tick_time = tick_time = 0;
+#ifndef EMSCRIPTEN	
 	while( 1 )
+#endif
 	{
 		if( ch8_OS_tick( &tick_time ) == 1 )
-			break;
+			return;
 
 		key = ch8_OS_ReadKeys();
 
@@ -126,7 +140,9 @@ void ch8_StartVM()
 			prev_tick_time = tick_time;
 		}
 		
+#ifndef EMSCRIPTEN	
 		usleep( 1000000/480 );
+#endif
 	}
 }
 
@@ -134,7 +150,7 @@ void ch8_execInstr()
 {
  	short opcode = _M[_PC] + ((short)_M[_PC+1] << 8);
 	ch8p_read_opcode( opcode, ch8_Instr );
-	ch8p_print_instr( ch8_Instr );
+	// ch8p_print_instr( ch8_Instr );
 
 	if( ch8_Instr->code != 0 )
 	{
