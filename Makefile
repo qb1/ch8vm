@@ -1,16 +1,20 @@
 .SUFFIXES: .bc .c .o .h
 
-CC=~/dev/llvm/llvm-3.2/bin/clang
-CFLAGS=-c `~/dev/llvm/llvm-3.2/bin/llvm-config --cflags`
-LDFLAGS=`sdl-config --libs` `~/dev/llvm/llvm-3.2/bin/llvm-config --libs --cflags --ldflags all`
+LLVM_PATH=~/dev/llvm/llvm-3.2/bin/
+#LLVM_PATH=
+
+CC=$(LLVM_PATH)clang
+CFLAGS=-c `$(LLVM_PATH)llvm-config --cflags`
+LDFLAGS=`sdl-config --libs` `$(LLVM_PATH)llvm-config --libs --cflags --ldflags all`
 SOURCES=main.c 
 DEPENDENCIES=parser.h ch8vm.h
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=ch8vm
 
-# BC_CC=$(CC)
+#BC_CC=$(CC)
 BC_CC=~/dev/emscripten/emcc 
-BC_LNK=~/dev/llvm/llvm-3.2/bin/llvm-link
+BC_LNK=$(LLVM_PATH)llvm-link
+#BC_CFLAGS=-c `sdl-config --cflags`
 BC_CFLAGS=-c `~/dev/emscripten/system/bin/sdl-config --cflags`
 BC_SOURCES=parser.c ch8vm.c ch8vm_sdl.c
 BC_OBJECTS=$(BC_SOURCES:.c=.bc)
