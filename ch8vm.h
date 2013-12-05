@@ -14,7 +14,10 @@
 #define CH8_SCREEN_WIDTH 64
 #define CH8_SCREEN_HEIGHT 32
 #define CH8_SCREEN_SIZE CH8_SCREEN_WIDTH*CH8_SCREEN_HEIGHT/8
-
+#define CH8_FPS	1000
+#define CH8_PAUSED_FPS 2
+#define CH8_TIMER_HZ 60
+#define CH8_SCREEN_HZ 30
 
 typedef struct
 {
@@ -34,6 +37,8 @@ typedef struct
 	uint16_t* StackPointer;
 	int8_t	 PausedOnKey;
 
+	int8_t	Paused;
+
 	/* Keys */
 	uint8_t Key[0x10];
 
@@ -46,15 +51,18 @@ extern CH8_INSTR* ch8_Instr;
 typedef void (*CH8_CALL)() ;
 
 void ch8_InitVM( CH8_STATE* state, CH8_INSTR* instr );
-void ch8_execInstr();
 void ch8_StartVM();
+void ch8_execInstr();
+void ch8_VMStep( int key );	// Must be called at CH8_FPS
+void ch8_VMTimerUpdate();	// Must be called at CH8_TIMER_HZ
 void ch8_printState( int x, int y, int w, int h );
 
 /* OS specific */
 void ch8_OS_Init();
-int ch8_OS_ReadKeys();					// Returns a pressed key, -1 otherwise
-void ch8_OS_PrintScreen();
-int ch8_OS_tick( uint32_t *tick );		// Returns 1 if must quit
+void ch8_OS_Start();
+void ch8_OS_Pause();
+void ch8_OS_Resume();
+void ch8_OS_UpdateScreen();
 
 /* CH8 Instruction set */
 void ch8_SCDOWN ();

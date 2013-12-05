@@ -63,55 +63,42 @@ void ch8_InitVM( CH8_STATE* state, CH8_INSTR* instr )
 	state->PC = 0x200;
 	state->StackPointer = state->CallStack;
 	state->PausedOnKey = -1;
+	state->Paused = 0;
 
 	srand (time(NULL));
 
-	/* OS specific init */
-	ch8_OS_Init();
+	// OS specific init
+	ch8_OS_Init();	
 }
 
 void ch8_StartVM()
 {
-	int key;
-	uint32_t prev_tick_time, tick_time;
+	ch8_OS_Start();
+}
 
-	prev_tick_time = tick_time = 0;
-	while( 1 )
+void ch8_VMStep( int key )
+{	
+	if( ch8_State->PausedOnKey != -1 && key != -1)
 	{
-		if( ch8_OS_tick( &tick_time ) == 1 )
-			break;
+		_V[ch8_State->PausedOnKey] = key;
+		ch8_State->PausedOnKey = -1;
+	}
 
-		key = ch8_OS_ReadKeys();
+	if( ch8_State->PausedOnKey == -1 && ! ch8_State->Paused )
+	{
+		ch8_execInstr();
+	}
+}
 
-		if( ch8_State->PausedOnKey != -1 && key != -1)
-		{
-			_V[ch8_State->PausedOnKey] = key;
-			ch8_State->PausedOnKey = -1;			
-		}
-
-		if( ch8_State->PausedOnKey == -1 )
-		{
-			ch8_execInstr();
-			//ch8_printState();
-		}
-				
-		// Timers down at 60Hz
-		if( tick_time > prev_tick_time + 1000/60 )
-		{
-			if( _DTIM > 0)
-			{
-		
-				_DTIM--;
-			}
-			if( _STIM > 0)
-			{
-				_STIM--;
-			}
-
-			prev_tick_time = tick_time;
-		}
-		
-		usleep( 1000000/480 );
+void ch8_VMTimerUpdate()
+{
+	if( _DTIM > 0)
+	{
+		_DTIM--;
+	}
+	if( _STIM > 0)
+	{
+		_STIM--;
 	}
 }
 
@@ -119,7 +106,7 @@ void ch8_execInstr()
 {
  	short opcode = _M[_PC] + ((short)_M[_PC+1] << 8);
 	ch8p_read_opcode( opcode, ch8_Instr );
-	ch8p_print_instr( ch8_Instr );
+	// ch8p_print_instr( ch8_Instr );
 
 	if( ch8_Instr->code != 0 )
 	{
@@ -154,7 +141,7 @@ void ch8_SCDOWN ()
 void ch8_CLS ()
 {
 	memset( _Scr, 0, sizeof(_Scr) );
-	ch8_OS_PrintScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
+	ch8_OS_UpdateScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
 }
 
 void ch8_RTS ()
@@ -368,7 +355,7 @@ void ch8_SPRITE ()
 			_V[0xF]=1;
 	}
 
-	ch8_OS_PrintScreen( _V[_X], _V[_Y], 8, _Z );
+	ch8_OS_UpdateScreen( _V[_X], _V[_Y], 8, _Z );
 }
 
 
