@@ -4,7 +4,7 @@ LLVM_PATH=~/dev/llvm/llvm-3.2/bin/
 #LLVM_PATH=
 
 CC=$(LLVM_PATH)clang
-CFLAGS=-c `$(LLVM_PATH)llvm-config --cflags`
+CFLAGS=-c `$(LLVM_PATH)llvm-config --cflags` -Wall
 LDFLAGS=`sdl-config --libs` `$(LLVM_PATH)llvm-config --libs --cflags --ldflags all`
 SOURCES=main.c 
 DEPENDENCIES=parser.h ch8vm.h

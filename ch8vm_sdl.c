@@ -97,31 +97,41 @@ void ch8_OS_PrintScreen(int x, int y, int w, int h)
 {
 	SDL_Rect rect;
 	unsigned char* scr;
+	int i,j, wcount;
 
 	rect.w = rect.h = PIX_SIZE;
 
 	// ch8_printState();
+	// 
 
-	rect.y = y*PIX_SIZE;
-	for( int i=y; i < CH8_SCREEN_HEIGHT && i < y+h; ++i )
+	printf(" called on %d,%d : %d %d\n", x, y, w, h);
+
+	
+	for( i=y; h>0; ++i, --h )
 	{
+		if( i >= CH8_SCREEN_HEIGHT || i < 0 )
+		{
+			i %= CH8_SCREEN_HEIGHT;
+		}
+
+		rect.y = i*PIX_SIZE;
 		scr = ch8_State->Screen + i * (unsigned char)(CH8_SCREEN_WIDTH/8);
 		
-		rect.x = x*PIX_SIZE;
-		for( int j=x; j < CH8_SCREEN_WIDTH && j<x+w; ++j )
+		for( j=x, wcount=w; wcount>0; ++j,--wcount )
 		{
-			if( scr[j/8] & 1<<(j%8) )
+			if( j >= CH8_SCREEN_WIDTH || j < 0 )
 			{
-				rect.x = j*PIX_SIZE;
+				j %= CH8_SCREEN_WIDTH;
+			}
+
+			rect.x = j*PIX_SIZE;
+			if( scr[j/8] & 1<<(j%8) )
+			{				
 				SDL_FillRect( screen, &rect, SDL_MapRGB( screen->format, 0, 255, 0 ) );	
 			}else{
 				SDL_FillRect( screen, &rect, SDL_MapRGB( screen->format, 0, 0, 0 ) );	
 			}
-
-			rect.x += PIX_SIZE;
 		}
-
-		rect.y += PIX_SIZE;
 	}
 
 	//Update Screen

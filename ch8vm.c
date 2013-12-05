@@ -185,6 +185,7 @@ void ch8_SCDOWN ()
 void ch8_CLS ()
 {
 	memset( _Scr, 0, sizeof(_Scr) );
+	ch8_OS_PrintScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
 }
 
 void ch8_RTS ()
@@ -398,7 +399,7 @@ void ch8_SPRITE ()
 			_V[0xF]=1;
 	}
 
-	ch8_OS_PrintScreen(_V[_X], _V[_Y], 8, _Z);
+	ch8_OS_PrintScreen( _V[_X], _V[_Y], 8, _Z );
 }
 
 

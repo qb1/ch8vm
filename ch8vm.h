@@ -48,7 +48,7 @@ typedef void (*CH8_CALL)() ;
 void ch8_InitVM( );
 void ch8_execInstr();
 void ch8_StartVM();
-void ch8_printState();
+void ch8_printState( int x, int y, int w, int h );
 
 /* OS specific */
 void ch8_OS_Init();
