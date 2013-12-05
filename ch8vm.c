@@ -69,7 +69,7 @@ int main()
 	ch8_InitVM();
 
 #ifdef EMSCRIPTEN
-	emscripten_set_main_loop(ch8_StartVM, 120, 0);
+	emscripten_set_main_loop(ch8_StartVM, 480, 0);
 #else
 	ch8_StartVM();
 #endif
