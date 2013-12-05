@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=-c `sdl-config --cflags`
+CFLAGS=-c `sdl-config --cflags` -Wall
 LDFLAGS=`sdl-config --libs`
 SOURCES=main.c parser.c ch8vm.c ch8vm_sdl.c
 DEPENDENCIES=parser.h ch8vm.h
