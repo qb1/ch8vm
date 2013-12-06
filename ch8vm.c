@@ -68,11 +68,11 @@ int main()
 {
 	ch8_InitVM();
 
-#ifdef EMSCRIPTEN
-	emscripten_set_main_loop(ch8_StartVM, 480, 0);
-#else
+// #ifdef EMSCRIPTEN
+// 	emscripten_set_main_loop( ch8_StartVM, 480, 0);
+// #else
 	ch8_StartVM();
-#endif
+// #endif
 
 	return 0;
 }
@@ -91,58 +91,42 @@ void ch8_InitVM()
 	ch8_State->PC = 0x200;
 	ch8_State->StackPointer = ch8_State->CallStack;
 	ch8_State->PausedOnKey = -1;
+	ch8_State->Paused = 0;
 
 	srand (time(NULL));
 
-	/* OS specific init */
-	ch8_OS_Init();
+	// OS specific init
+	ch8_OS_Init();	
 }
 
 void ch8_StartVM()
 {
-	int key;
-	static uint32_t prev_tick_time=0, tick_time=0;
+	ch8_OS_Start();
+}
 
-#ifndef EMSCRIPTEN	
-	while( 1 )
-#endif
+void ch8_VMStep( int key )
+{	
+	if( ch8_State->PausedOnKey != -1 && key != -1)
 	{
-		if( ch8_OS_tick( &tick_time ) == 1 )
-			return;
+		_V[ch8_State->PausedOnKey] = key;
+		ch8_State->PausedOnKey = -1;
+	}
 
-		key = ch8_OS_ReadKeys();
+	if( ch8_State->PausedOnKey == -1 && ! ch8_State->Paused )
+	{
+		ch8_execInstr();
+	}
+}
 
-		if( ch8_State->PausedOnKey != -1 && key != -1)
-		{
-			_V[ch8_State->PausedOnKey] = key;
-			ch8_State->PausedOnKey = -1;			
-		}
-
-		if( ch8_State->PausedOnKey == -1 )
-		{
-			ch8_execInstr();
-			//ch8_printState();
-		}
-				
-		// Timers down at 60Hz
-		if( tick_time > prev_tick_time + 1000/60 )
-		{
-			if( _DTIM > 0)
-			{
-		
-				_DTIM--;
-			}
-			if( _STIM > 0)
-			{
-				_STIM--;
-			}
-
-			prev_tick_time = tick_time;
-		}
-		
-#ifndef EMSCRIPTEN	
-		usleep( 1000000/480 );
-#endif
+void ch8_VMTimerUpdate()
+{
+	if( _DTIM > 0)
+	{
+		_DTIM--;
+	}
+	if( _STIM > 0)
+	{
+		_STIM--;
 	}
 }
 
@@ -185,7 +169,7 @@ void ch8_SCDOWN ()
 void ch8_CLS ()
 {
 	memset( _Scr, 0, sizeof(_Scr) );
-	ch8_OS_PrintScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
+	ch8_OS_UpdateScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
 }
 
 void ch8_RTS ()
@@ -399,7 +383,7 @@ void ch8_SPRITE ()
 			_V[0xF]=1;
 	}
 
-	ch8_OS_PrintScreen( _V[_X], _V[_Y], 8, _Z );
+	ch8_OS_UpdateScreen( _V[_X], _V[_Y], 8, _Z );
 }
 
 
