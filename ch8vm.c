@@ -54,7 +54,10 @@ unsigned char _ch8Font[] = {
 CH8_STATE* ch8_State;
 CH8_INSTR* ch8_Instr;
 
-static CH8_STATE global_state = { .I=1 };
+static const uint8_t rom_memory[] = { 0x00 };
+static uint16_t rom_memory_size=1;
+
+static CH8_STATE global_state;
 static CH8_INSTR global_instr;
 
 int main()
@@ -70,12 +73,16 @@ void ch8_InitVM()
 	ch8_State = &global_state;
 	ch8_Instr = &global_instr;
 
+	memset( ch8_State, 0, sizeof(CH8_STATE) );
 	memset( ch8_Instr, 0, sizeof(CH8_INSTR) );
+	
 	memcpy( ch8_State->M, _ch8Font, sizeof( _ch8Font ) );
+	memcpy( ch8_State->M+0x200, rom_memory, rom_memory_size );
 
 	ch8_State->PC = 0x200;
 	ch8_State->StackPointer = ch8_State->CallStack;
 	ch8_State->PausedOnKey = -1;
+	ch8_State->Paused = 0;
 
 	srand (time(NULL));
 

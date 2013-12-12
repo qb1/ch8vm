@@ -51,7 +51,6 @@ extern CH8_INSTR* ch8_Instr;
 typedef void (*CH8_CALL)() ;
 
 void ch8_InitVM( );
-void ch8_execInstr();
 void ch8_StartVM();
 void ch8_execInstr();
 void ch8_VMStep( int key );	// Must be called at CH8_FPS

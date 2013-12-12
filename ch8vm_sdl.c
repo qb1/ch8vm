@@ -42,8 +42,6 @@ void ch8_OS_Init()
 	
 	//Update Screen
     SDL_Flip( screen );
-
-    ch8_OS_Pause();
 }
 
 void ch8_OS_Start()
