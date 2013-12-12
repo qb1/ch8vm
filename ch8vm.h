@@ -48,11 +48,11 @@ typedef struct
 extern CH8_STATE* ch8_State;
 extern CH8_INSTR* ch8_Instr;
 
-#define OPCODE_ARGS CH8_STATE* state, unsigned short param1, unsigned short param2, unsigned short param3
+#define OPCODE_ARGS  uint16_t param1, uint16_t param2, uint16_t param3
 
 typedef void (*CH8_CALL)( OPCODE_ARGS ) ;
 
-void ch8_InitVM( );
+void ch8_InitVM( uint8_t *memory, uint16_t mem_size );
 void ch8_StartVM();
 void ch8_execInstr();
 void ch8_VMStep( int key );	// Must be called at CH8_FPS

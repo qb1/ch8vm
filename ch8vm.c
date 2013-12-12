@@ -33,16 +33,16 @@
 // #define _Y ch8_Instr->param2
 // #define _Z ch8_Instr->param3
 
-#define _M state->M
-#define _I state->I
-#define _V state->V
-#define _Scr state->Screen
-#define _PC state->PC
-#define _SP state->StackPointer
-#define _KEY state->Key
+#define _M ch8_State->M
+#define _I ch8_State->I
+#define _V ch8_State->V
+#define _Scr ch8_State->Screen
+#define _PC ch8_State->PC
+#define _SP ch8_State->StackPointer
+#define _KEY ch8_State->Key
 
-#define _DTIM state->DelayTimer
-#define _STIM state->SoundTimer
+#define _DTIM ch8_State->DelayTimer
+#define _STIM ch8_State->SoundTimer
 
 #define _X param1
 #define _Y param2
@@ -68,32 +68,30 @@ unsigned char _ch8Font[] = {
 };
 
 CH8_STATE* ch8_State;
-CH8_INSTR* ch8_Instr;
 
-static const uint8_t rom_memory[] = { 0x00 };
-static uint16_t rom_memory_size=1;
+// Will be manually created
+// static volatile uint8_t rom_memory[] = { 0x00 };
+// static volatile uint16_t rom_memory_size=1;
 
 static CH8_STATE global_state;
-static CH8_INSTR global_instr;
+// static CH8_INSTR global_instr;
 
-int main()
-{
-	ch8_InitVM();
-	ch8_StartVM();
+// int main()
+// {
+	// ch8_InitVM();
+	// ch8_StartVM();
 
-	return 0;
-}
+// 	return 0;
+// }
 
-void ch8_InitVM()
+void ch8_InitVM( uint8_t *memory, uint16_t mem_size )
 {
 	ch8_State = &global_state;
-	ch8_Instr = &global_instr;
 
 	memset( ch8_State, 0, sizeof(CH8_STATE) );
-	memset( ch8_Instr, 0, sizeof(CH8_INSTR) );
 	
 	memcpy( ch8_State->M, _ch8Font, sizeof( _ch8Font ) );
-	memcpy( ch8_State->M+0x200, rom_memory, rom_memory_size );
+	memcpy( ch8_State->M+0x200, memory, mem_size );
 
 	ch8_State->PC = 0x200;
 	ch8_State->StackPointer = ch8_State->CallStack;
@@ -139,16 +137,18 @@ void ch8_VMTimerUpdate()
 
 void ch8_execInstr()
 {
+	CH8_INSTR instr;
  	short opcode = ch8_State->M[ch8_State->PC] + ((short)ch8_State->M[ch8_State->PC+1] << 8);
-	ch8p_read_opcode( opcode, ch8_Instr );
-	ch8p_print_instr( ch8_Instr );
+	ch8p_read_opcode( opcode, &instr );
+	printf( "%X,%X,%X: ", instr.param1, instr.param2, instr.param3 );
+	ch8p_print_instr( &instr );
 
-	if( ch8_Instr->code != 0 )
+	if( instr.code != 0 )
 	{
 		ch8_State->PC += 2;
-		CallTable[ch8_Instr->code]( ch8_State, ch8_Instr->param1, ch8_Instr->param2, ch8_Instr->param3 );
+		CallTable[instr.code]( instr.param1, instr.param2, instr.param3 );
 	}else{
-		printf( "Error : Trying to execute unrecognized opcode %X at %X\n", ch8_Instr->code, ch8_State->PC );
+		printf( "Error : Trying to execute unrecognized opcode %X at %X\n", instr.code, ch8_State->PC );
 	}
 }
 
@@ -170,7 +170,7 @@ void ch8_printState()
 
 void ch8_SCDOWN ( OPCODE_ARGS )
 {
-	printf( "Error: ch8_SCDOWN not yet implemented\n" );
+	// printf( "Error: ch8_SCDOWN not yet implemented\n" );	
 }
 
 void ch8_CLS ( OPCODE_ARGS )

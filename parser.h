@@ -1,6 +1,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include <stdint.h>
+
 typedef enum CH8_OPCODE
 {
 	NONE,
@@ -71,14 +73,14 @@ typedef enum CH8_OPCODE
 typedef struct
 {
 	CH8_OPCODE code;
-	unsigned short param1;
-	unsigned short param2;
-	unsigned short param3;
+	uint16_t param1;
+	uint16_t param2;
+	uint16_t param3;
 
 	//short address;
 } CH8_INSTR;
 
-int ch8p_read_opcode( unsigned short opcode, CH8_INSTR* instruction );
+int ch8p_read_opcode( uint16_t opcode, CH8_INSTR* instruction );
 void ch8p_print_instr( CH8_INSTR* instruction );
 
 #endif // PARSER_H
