@@ -175,6 +175,7 @@ void ch8_SCDOWN ( OPCODE_ARGS )
 
 void ch8_CLS ( OPCODE_ARGS )
 {
+	printf( "CLS! %X %X %X\n", param1, param2, param3 );
 	memset( _Scr, 0, sizeof(_Scr) );
 	ch8_OS_UpdateScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
 }
@@ -391,6 +392,7 @@ void ch8_SPRITE ( OPCODE_ARGS )
 	}
 
 	ch8_OS_UpdateScreen( _V[_X], _V[_Y], 8, _Z );
+	ch8_OS_PrintScreen( _V[_X], _V[_Y], 8, _Z );
 }
 
 

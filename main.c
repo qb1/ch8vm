@@ -2,14 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <llvm-c/Core.h>
-#include <llvm-c/Target.h>
-#include <llvm-c/ExecutionEngine.h>
-#include <llvm-c/BitReader.h>
-#include <llvm-c/BitWriter.h>
-#include <llvm-c/Analysis.h>
-
 #include "ch8vm.h"
+#include "ch8vm_llvm.h"
 
 int main(int argc, char *argv[])
 {
@@ -42,110 +36,58 @@ int main(int argc, char *argv[])
 	fclose(file_program);
 
 	// Begin exp.
-	char *err;
+	ch8_ll_Init( "ch8vmlib.bc", rom_memory, fileLen );
+	
+	ch8_ll_AddOpcodeCall( "ch8_CLS", 0, 0, 0 );
+	ch8_ll_AddOpcodeCall( "ch8_MVI", 0x248, 0, 0 );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 0, 0, 0 );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 1, 0x1E, 0 );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0, 0 );
 
-	LLVMModuleRef module;
-	// LLVMBuilderRef builder;
-	// LLVMPassManagerRef pass_mgr;
-	LLVMExecutionEngineRef exec_engine;
-	LLVMMemoryBufferRef buffer;	
 
-	LLVMInitializeNativeTarget();
-	LLVMLinkInJIT ();
 
-	if( LLVMCreateMemoryBufferWithContentsOfFile("ch8vmlib.bc", &buffer, &err) ) 
-	{
-		fprintf (stderr, "error: %s\n", err);
-    	LLVMDisposeMessage (err);
-    	return 1;
-    }
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-    if( LLVMParseBitcode(buffer, &module, &err) )
-    {
-    	fprintf (stderr, "error: %s\n", err);
-    	LLVMDisposeMessage (err);
-    	return 1;
-    }
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
 
-    // VM loaded!
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-   	// Add the global state's initialiser
-   	LLVMContextRef context = LLVMGetModuleContext(module);
-   	LLVMTypeRef rommem_type = LLVMArrayType( LLVMInt8TypeInContext(context), fileLen);
-   	
-   	// LLVMValueRef rommem_var = LLVMGetNamedGlobal( module, "rom_memory" );
-   	// LLVMValueRef rommem_var = LLVMAddGlobal( module,  type, "rom_memory" );
-   	// LLVMDeleteGlobal( rommem_var );
-   	LLVMValueRef rommem_var = LLVMAddGlobal( module, rommem_type, "rom_memory");
-   	LLVMSetInitializer( rommem_var, LLVMConstStringInContext( context, (char*)rom_memory, fileLen, 1 ) );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
 
-   	// LLVMValueRef romsize_var = LLVMGetNamedGlobal( module, "rom_memory_size" );
-   	// LLVMValueRef romsize_var = LLVMAddGlobal( module,  LLVMInt16TypeInContext(context), "rom_memory_size" );
-   	// LLVMSetInitializer( romsize_var, LLVMConstInt( LLVMInt16TypeInContext(context), fileLen, 0 ) );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-   	// LLVMDumpModule( module ); 
-   	// LLVMVerifyModule( module, LLVMPrintMessageAction, NULL );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
 
-   	// Create a new function
-   	LLVMTypeRef vmprog_type = LLVMFunctionType( LLVMVoidTypeInContext(context), NULL, 0, 0 );
-   	LLVMValueRef vmprog_func = LLVMAddFunction( module, "vm_program", vmprog_type );
-   	LLVMAddFunctionAttr( vmprog_func, LLVMNoUnwindAttribute );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-   	// Fill it with a simple program
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
 
-   	LLVMBuilderRef builder = LLVMCreateBuilderInContext( context );
-   	LLVMBasicBlockRef bb = LLVMAppendBasicBlockInContext( context, vmprog_func, "" );
-   	LLVMPositionBuilder (builder, bb, LLVMGetFirstInstruction(bb));
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-   	LLVMValueRef mem_ptr = LLVMBuildGEP( builder, rommem_var, NULL, 0, "" );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
 
-   	LLVMValueRef args[2];
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-   	args[0] = mem_ptr;
-   	args[1] = LLVMConstInt( LLVMInt16TypeInContext(context), fileLen, 0 );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
 
-   	LLVMBuildCall( builder, LLVMGetNamedFunction( module, "ch8_InitVM"), args, 2, "" );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-    LLVMValueRef op_arg[3];
-   	op_arg[0] = LLVMConstInt( LLVMInt16TypeInContext(context), 1, 0 );
-   	op_arg[1] = LLVMConstInt( LLVMInt16TypeInContext(context), 0, 0 );
-   	op_arg[2] = LLVMConstInt( LLVMInt16TypeInContext(context), 0, 0 );
-   	LLVMValueRef call = LLVMBuildCall( builder, LLVMGetNamedFunction( module, "ch8_CLS"), op_arg, 3, "" );
-   	LLVMSetFunctionCallConv( call, LLVMCCallConv );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
 
-   	LLVMBuildRetVoid( builder );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
 
-	LLVMDumpModule( module ); 
+	ch8_ll_EndCompilation();
+	ch8_ll_RunJIT();
 
-	// LLVMPassManagerRef passmgr = LLVMCreatePassManager( );
-	// LLVMRunPassManager( passmgr, module );
-	// LLVMDisposePassManager( passmgr );
-
-	// LLVMWriteBitcodeToFile( module, "output.bc" );
-
-	// LLVMVerifyModule( module, LLVMPrintMessageAction, NULL );
-
-	// Call the VM
-   	if(LLVMCreateExecutionEngineForModule(&exec_engine, module, &err) )
-   	{
-        fprintf (stderr, "error: %s\n", err);
-        LLVMDisposeMessage (err);
-        return 1;
-    }
-
- //    const char * const main_func_args [] = {"ch8vm"};
- //    LLVMValueRef main_func = LLVMGetNamedFunction( module, "main");
-	// LLVMRunFunctionAsMain( exec_engine, main_func, 1, main_func_args, NULL );
-
-	LLVMRunFunction( exec_engine, vmprog_func, 0, NULL );
-
-	// Write to file
-	// if( LLVMVerifyModule( module, LLVMPrintMessageAction, NULL ) )
-	// 	exit(1);
-
-    
+	getchar();
 
     return 0;
-
-	// return 0;
 }

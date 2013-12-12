@@ -58,62 +58,62 @@ static char instr_parser_repr[CH8_INSTR_COUNT][4] =
 
 static char* instr_desc[CH8_INSTR_COUNT] = 
 {
-	"Scroll display %X lines down",
-	"Clear display ",
-	"Return from subroutine",
-	"Scroll display 4 pixels right",
-	"Scroll display 4 pixels left",
-	"Exit CHIP interpreter",
+	"ch8_SCDOWN : Scroll display %X lines down",
+	"ch8_CLS : Clear display ",
+	"ch8_RTS : Return from subroutine",
+	"ch8_SCRIGHT display 4 pixels right",
+	"ch8_SCLEFT : Scroll display 4 pixels left",
+	"ch8_EXIT Exit CHIP interpreter",
 	"Disable extended screen mode",
 	"Enable extended screen mode for full-screen graphics",
 	
 	
-	"Jump to %X ",
-	"Call subroutine at %X ",
+	"ch8_JMP Jump to %X ",
+	"ch8_CALL Call subroutine at %X ",
 	"Skip next instruction if V%X == %X ",
 	"Skip next instruction if V%X <> %X ",
 	"Skip next instruction if V%X == V%X ",
 	
 	
-	"V%X := %X ",
-	"V%X := + %X ",
+	"ch8_MOV_K V%X := %X ",
+	"ch8_ADD_K V%X := + %X ",
 	
 	
-	"V%X := V%X, VF may change ",
-	"V%X := or V%X, VF may change ",
-	"V%X := and V%X, VF may change ",
-	"V%X := xor V%X, VF may change",
-	"V%X := + V%X, VF := carry ",
-	"V%X := - V%X, VF := not borrow ",
-	"V%X := shr 1, VF := carry ",
-	"V%X := V%X - VX, VF := not borrow",
-	"V%X := shl 1, VF := carry ",
+	"ch8_MOV V%X := V%X, VF may change ",
+	"ch8_OR V%X := or V%X, VF may change ",
+	"ch8_AND V%X := and V%X, VF may change ",
+	"ch8_XOR V%X := xor V%X, VF may change",
+	"ch8_ADD V%X := + V%X, VF := carry ",
+	"ch8_SUB V%X := - V%X, VF := not borrow ",
+	"ch8_SHR V%X := shr 1, VF := carry ",
+	"ch8_RSB V%X := V%X - VX, VF := not borrow",
+	"ch8_SHL V%X := shl 1, VF := carry ",
 	
 	"Skip next instruction if V%X <> V%X ",
 	
 	
-	"I := %X ",
-	"Jump to %X+V0 ",
+	"ch8_MVI I := %X ",
+	"ch8_JMI Jump to %X+V0 ",
 	"V%X := pseudorandom_number and %X ",
 	
 	
-	"Show N-byte sprite from M(I) at coords (V%X,V%X), N=%X, VF := collision.",//\n\tIf N=0 and extended mode, show 16x16 sprite.",
+	"ch8_SPRITE Show N-byte sprite from M(I) at coords (V%X,V%X), N=%X, VF := collision.",//\n\tIf N=0 and extended mode, show 16x16 sprite.",
 	
 	
 	"Skip next instruction if key V%X pressed ",
 	"Skip next instruction if key V%X not pressed ",
 	
 	
-	"V%X := delay_timer ",
-	"wait for keypress, store hex value of key in V%X ",
-	"delay_timer := V%X ",
-	"sound_timer := V%X ",
-	"I := I + V%X ",
-	"Point I to 5-byte font sprite for hex character V%X ",
-	"Point I to 10-byte font sprite for digit V%X (0..9)",
-	"Store BCD representation of V%X in M(I)..M(I+2) ",
-	"Store V0..V%X in memory starting at M(I) ",
-	"Read V0..V%X from memory starting at M(I) ",
+	"ch8_GDELAY V%X := delay_timer ",
+	"ch8_KEY wait for keypress, store hex value of key in V%X ",
+	"ch8_SDELAY delay_timer := V%X ",
+	"ch8_SSOUND sound_timer := V%X ",
+	"ch8_ADI I := I + V%X ",
+	"ch8_FONT Point I to 5-byte font sprite for hex character V%X ",
+	"ch8_XFONT Point I to 10-byte font sprite for digit V%X (0..9)",
+	"ch8_BCD Store BCD representation of V%X in M(I)..M(I+2) ",
+	"ch8_STR Store V0..V%X in memory starting at M(I) ",
+	"ch8_LDR Read V0..V%X from memory starting at M(I) ",
 	"Store V0..V%X in RPL user flags (X <= 7)",
 	"Read V0..V%X from RPL user flags (X <= 7)" 
 };

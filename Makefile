@@ -3,8 +3,8 @@
 CC=clang
 CFLAGS=-c `llvm-config --cflags`
 LDFLAGS=`sdl-config --libs` `llvm-config --libs --cflags --ldflags all`
-SOURCES=main.c 
-DEPENDENCIES=parser.h ch8vm.h
+SOURCES=main.c ch8vm_llvm.c
+DEPENDENCIES=parser.h ch8vm.h ch8vm_llvm.h
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=ch8vm
 
