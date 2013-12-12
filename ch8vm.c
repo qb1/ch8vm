@@ -17,20 +17,36 @@
 
 /* Bunch 'o help macro */
 //#define _M (ch8_State->M-0x200)
-#define _M ch8_State->M
-#define _I ch8_State->I
-#define _V ch8_State->V
-#define _Scr ch8_State->Screen
-#define _PC ch8_State->PC
-#define _SP ch8_State->StackPointer
-#define _KEY ch8_State->Key
 
-#define _DTIM ch8_State->DelayTimer
-#define _STIM ch8_State->SoundTimer
+// #define _M ch8_State->M
+// #define _I ch8_State->I
+// #define _V ch8_State->V
+// #define _Scr ch8_State->Screen
+// #define _PC ch8_State->PC
+// #define _SP ch8_State->StackPointer
+// #define _KEY ch8_State->Key
 
-#define _X ch8_Instr->param1
-#define _Y ch8_Instr->param2
-#define _Z ch8_Instr->param3
+// #define _DTIM ch8_State->DelayTimer
+// #define _STIM ch8_State->SoundTimer
+
+// #define _X ch8_Instr->param1
+// #define _Y ch8_Instr->param2
+// #define _Z ch8_Instr->param3
+
+#define _M state->M
+#define _I state->I
+#define _V state->V
+#define _Scr state->Screen
+#define _PC state->PC
+#define _SP state->StackPointer
+#define _KEY state->Key
+
+#define _DTIM state->DelayTimer
+#define _STIM state->SoundTimer
+
+#define _X param1
+#define _Y param2
+#define _Z param3
 
 unsigned char _ch8Font[] = {
 		0xF0,0x90,0x90,0x90,0xF0,
@@ -86,8 +102,6 @@ void ch8_InitVM()
 
 	srand (time(NULL));
 
-	printf( "Called!\n" );
-
 	/* OS specific init */
 	ch8_OS_Init();
 }
@@ -101,7 +115,7 @@ void ch8_VMStep( int key )
 {	
 	if( ch8_State->PausedOnKey != -1 && key != -1)
 	{
-		_V[ch8_State->PausedOnKey] = key;
+		ch8_State->V[ch8_State->PausedOnKey] = key;
 		ch8_State->PausedOnKey = -1;
 	}
 
@@ -113,39 +127,39 @@ void ch8_VMStep( int key )
 
 void ch8_VMTimerUpdate()
 {
-	if( _DTIM > 0)
+	if( ch8_State->DelayTimer > 0)
 	{
-		_DTIM--;
+		ch8_State->DelayTimer--;
 	}
-	if( _STIM > 0)
+	if( ch8_State->SoundTimer > 0)
 	{
-		_STIM--;
+		ch8_State->SoundTimer--;
 	}
 }
 
 void ch8_execInstr()
 {
- 	short opcode = _M[_PC] + ((short)_M[_PC+1] << 8);
+ 	short opcode = ch8_State->M[ch8_State->PC] + ((short)ch8_State->M[ch8_State->PC+1] << 8);
 	ch8p_read_opcode( opcode, ch8_Instr );
-	// ch8p_print_instr( ch8_Instr );
+	ch8p_print_instr( ch8_Instr );
 
 	if( ch8_Instr->code != 0 )
 	{
-		_PC += 2;
-		CallTable[ch8_Instr->code]();
+		ch8_State->PC += 2;
+		CallTable[ch8_Instr->code]( ch8_State, ch8_Instr->param1, ch8_Instr->param2, ch8_Instr->param3 );
 	}else{
-		printf( "Error : Trying to execute unrecognized opcode %X at %X\n", ch8_Instr->code, _PC );
+		printf( "Error : Trying to execute unrecognized opcode %X at %X\n", ch8_Instr->code, ch8_State->PC );
 	}
 }
 
 void ch8_printState()
 {
-	printf( "\n\t- Current state: I=%.4X PC=%.4X", _I, _PC );
+	printf( "\n\t- Current state: I=%.4X PC=%.4X", ch8_State->I, ch8_State->PC );
 	for( int i=0; i <= 0xF; ++i )
 	{
 		if( i%4 == 0 )
 			printf( "\n\t" );
-		printf( "V[%X] = %.2X ", i, _V[i] );
+		printf( "V[%X] = %.2X ", i, ch8_State->V[i] );
 	}
 	printf( "\n\n" );
 }
@@ -154,111 +168,111 @@ void ch8_printState()
    CHIP8 INSTRUCTIONS 
  **********************/
 
-void ch8_SCDOWN ()
+void ch8_SCDOWN ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_SCDOWN not yet implemented\n" );
 }
 
-void ch8_CLS ()
+void ch8_CLS ( OPCODE_ARGS )
 {
 	memset( _Scr, 0, sizeof(_Scr) );
 	ch8_OS_UpdateScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
 }
 
-void ch8_RTS ()
+void ch8_RTS ( OPCODE_ARGS )
 {
 	_PC = *(--_SP);
 }
 
-void ch8_SCRIGHT ()
+void ch8_SCRIGHT ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_SCRIGHT not yet implemented\n" );
 }
 
-void ch8_SCLEFT ()
+void ch8_SCLEFT ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_SCLEFT not yet implemented\n" );
 }
 
-void ch8_EXIT ()
+void ch8_EXIT ( OPCODE_ARGS )
 {
 	printf( "CH8 Exits...\n" );
 	exit(0);
 }
 
-void ch8_LOW ()
+void ch8_LOW ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_LOW not yet implemented\n" );
 }
 
-void ch8_HIGH ()
+void ch8_HIGH ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_HIGH not yet implemented\n" );
 }
 
 
-void ch8_JMP ()
+void ch8_JMP ( OPCODE_ARGS )
 {
 	_PC = _X;
 }
 
-void ch8_CALL ()
+void ch8_CALL ( OPCODE_ARGS )
 {
 	*(_SP++) = _PC;
 	_PC = _X;
 }
 
-void ch8_SKEQ_K ()
+void ch8_SKEQ_K ( OPCODE_ARGS )
 {
 	if( _V[_X] == _Y )
 		_PC += 2;
 }
 
-void ch8_SKNE_K ()
+void ch8_SKNE_K ( OPCODE_ARGS )
 {
 	if( _V[_X] != _Y )
 		_PC += 2;
 }
 
-void ch8_SKEQ ()
+void ch8_SKEQ ( OPCODE_ARGS )
 {
 	if( _V[_X] == _V[_Y] )
 		_PC += 2;
 }
 
 
-void ch8_MOV_K ()
+void ch8_MOV_K ( OPCODE_ARGS )
 {
 	_V[_X] = (unsigned char)_Y;
 }
 
-void ch8_ADD_K ()
+void ch8_ADD_K ( OPCODE_ARGS )
 {
 	_V[_X] += _Y;
 }
 
 
-void ch8_MOV ()
+void ch8_MOV ( OPCODE_ARGS )
 {
 	_V[_X] = _V[_Y];
 }
 
-void ch8_OR ()
+void ch8_OR ( OPCODE_ARGS )
 {
 	_V[_X] |= _V[_Y];
 }
 
-void ch8_AND ()
+void ch8_AND ( OPCODE_ARGS )
 {
 	_V[_X] &= _V[_Y];
 }
 
-void ch8_XOR ()
+void ch8_XOR ( OPCODE_ARGS )
 {
 	_V[_X] ^= _V[_Y];
 }
 
-void ch8_ADD ()
+void ch8_ADD ( OPCODE_ARGS )
 {
 	uint16_t res;
 
@@ -270,7 +284,7 @@ void ch8_ADD ()
 		_V[0xF] = 0;
 }
 
-void ch8_SUB ()
+void ch8_SUB ( OPCODE_ARGS )
 {	
 	if( _V[_X] >= _V[_Y] )
 	{		
@@ -282,13 +296,13 @@ void ch8_SUB ()
 	}	
 }
 
-void ch8_SHR ()
+void ch8_SHR ( OPCODE_ARGS )
 {
 	_V[0xF] = _V[_X] & 1;
 	_V[_X] >>= 1;
 }
 
-void ch8_RSB ()
+void ch8_RSB ( OPCODE_ARGS )
 {	
 	if( _V[_Y] >=  _V[_X] )
 	{
@@ -300,38 +314,38 @@ void ch8_RSB ()
 	}
 }
 
-void ch8_SHL ()
+void ch8_SHL ( OPCODE_ARGS )
 {
 	_V[0xF] = (_V[_X] & 0x80) >> 7;
 	_V[_X] <<= 1;
 }
 
 
-void ch8_SKNE ()
+void ch8_SKNE ( OPCODE_ARGS )
 {
 	if( _V[_X] != _V[_Y] )
 		_PC += 2;
 }
 
 
-void ch8_MVI ()
+void ch8_MVI ( OPCODE_ARGS )
 {
 	_I = _X;
 }
 
-void ch8_JMI ()
+void ch8_JMI ( OPCODE_ARGS )
 {
 	_PC = _V[0] + _X;
 }
 
-void ch8_RAND ()
+void ch8_RAND ( OPCODE_ARGS )
 {
 	_V[_X] = (uint8_t)(rand() % (_Y+1));
 	printf( "rand:%X\n", _V[_X] );
 }
 
 
-void ch8_SPRITE ()
+void ch8_SPRITE ( OPCODE_ARGS )
 {
 	uint8_t line;
 	uint8_t* sprite = _M+_I;
@@ -380,62 +394,62 @@ void ch8_SPRITE ()
 }
 
 
-void ch8_SKPR ()
+void ch8_SKPR ( OPCODE_ARGS )
 {
 	if( _KEY[_V[_X]] != 0 )
 		_PC += 2;
 }
 
-void ch8_SKUP ()
+void ch8_SKUP ( OPCODE_ARGS )
 {
 	if( _KEY[_V[_X]] == 0 )
 		_PC += 2;
 }
 
 
-void ch8_GDELAY ()
+void ch8_GDELAY ( OPCODE_ARGS )
 {
 	_V[_X] = _DTIM;
 }
 
-void ch8_KEY ()
+void ch8_KEY ( OPCODE_ARGS )
 {
 	ch8_State->PausedOnKey = _X;
 }
 
-void ch8_SDELAY ()
+void ch8_SDELAY ( OPCODE_ARGS )
 {
 	_DTIM = _V[_X];
 }
 
-void ch8_SSOUND ()
+void ch8_SSOUND ( OPCODE_ARGS )
 {
 	_STIM = _V[_X];
 }
 
-void ch8_ADI ()
+void ch8_ADI ( OPCODE_ARGS )
 {
 	_I += _V[_X];
 }
 
-void ch8_FONT ()
+void ch8_FONT ( OPCODE_ARGS )
 {
 	_I = _V[_X]*5;
 }
 
-void ch8_XFONT ()
+void ch8_XFONT ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_XFONT not yet implemented\n" );
 }
 
-void ch8_BCD ()
+void ch8_BCD ( OPCODE_ARGS )
 {
 	_M[_I] = (_V[_X]/100);
 	_M[_I+1] = (_V[_X]%100)/10;
 	_M[_I+2] = (_V[_X]%100)%10;
 }
 
-void ch8_STR ()
+void ch8_STR ( OPCODE_ARGS )
 {
 	for( int i=0; i<=_X; ++i )
 	{
@@ -443,7 +457,7 @@ void ch8_STR ()
 	}
 }
 
-void ch8_LDR ()
+void ch8_LDR ( OPCODE_ARGS )
 {
 	for( int i=0; i<=_X; ++i )
 	{
@@ -451,12 +465,12 @@ void ch8_LDR ()
 	}
 }
 
-void ch8_STR_RPL ()
+void ch8_STR_RPL ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_STR_RPL not yet implemented\n" );
 }
 
-void ch8_LDR_RPL ()
+void ch8_LDR_RPL ( OPCODE_ARGS )
 {
 	printf( "Error: ch8_LDR_RPL not yet implemented\n" );
 }

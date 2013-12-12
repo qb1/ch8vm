@@ -48,7 +48,9 @@ typedef struct
 extern CH8_STATE* ch8_State;
 extern CH8_INSTR* ch8_Instr;
 
-typedef void (*CH8_CALL)() ;
+#define OPCODE_ARGS CH8_STATE* state, unsigned short param1, unsigned short param2, unsigned short param3
+
+typedef void (*CH8_CALL)( OPCODE_ARGS ) ;
 
 void ch8_InitVM( );
 void ch8_StartVM();
@@ -65,57 +67,57 @@ void ch8_OS_Resume();
 void ch8_OS_UpdateScreen();
 
 /* CH8 Instruction set */
-void ch8_SCDOWN ();
-void ch8_CLS ();
-void ch8_RTS ();
-void ch8_SCRIGHT ();
-void ch8_SCLEFT ();
-void ch8_EXIT ();
-void ch8_LOW ();
-void ch8_HIGH ();
+void ch8_SCDOWN ( OPCODE_ARGS );
+void ch8_CLS ( OPCODE_ARGS );
+void ch8_RTS ( OPCODE_ARGS );
+void ch8_SCRIGHT ( OPCODE_ARGS );
+void ch8_SCLEFT ( OPCODE_ARGS );
+void ch8_EXIT ( OPCODE_ARGS );
+void ch8_LOW ( OPCODE_ARGS );
+void ch8_HIGH ( OPCODE_ARGS );
 
-void ch8_JMP ();
-void ch8_CALL ();
-void ch8_SKEQ_K ();
-void ch8_SKNE_K ();
-void ch8_SKEQ ();
+void ch8_JMP ( OPCODE_ARGS );
+void ch8_CALL ( OPCODE_ARGS );
+void ch8_SKEQ_K ( OPCODE_ARGS );
+void ch8_SKNE_K ( OPCODE_ARGS );
+void ch8_SKEQ ( OPCODE_ARGS );
 
-void ch8_MOV_K ();
-void ch8_ADD_K ();
+void ch8_MOV_K ( OPCODE_ARGS );
+void ch8_ADD_K ( OPCODE_ARGS );
 
-void ch8_MOV ();
-void ch8_OR ();
-void ch8_AND ();
-void ch8_XOR ();
-void ch8_ADD ();
-void ch8_SUB ();
-void ch8_SHR ();
-void ch8_RSB ();
-void ch8_SHL ();
+void ch8_MOV ( OPCODE_ARGS );
+void ch8_OR ( OPCODE_ARGS );
+void ch8_AND ( OPCODE_ARGS );
+void ch8_XOR ( OPCODE_ARGS );
+void ch8_ADD ( OPCODE_ARGS );
+void ch8_SUB ( OPCODE_ARGS );
+void ch8_SHR ( OPCODE_ARGS );
+void ch8_RSB ( OPCODE_ARGS );
+void ch8_SHL ( OPCODE_ARGS );
 
-void ch8_SKNE ();
+void ch8_SKNE ( OPCODE_ARGS );
 
-void ch8_MVI ();
-void ch8_JMI ();
-void ch8_RAND ();
+void ch8_MVI ( OPCODE_ARGS );
+void ch8_JMI ( OPCODE_ARGS );
+void ch8_RAND ( OPCODE_ARGS );
 
-void ch8_SPRITE ();
+void ch8_SPRITE ( OPCODE_ARGS );
 
-void ch8_SKPR ();
-void ch8_SKUP ();
+void ch8_SKPR ( OPCODE_ARGS );
+void ch8_SKUP ( OPCODE_ARGS );
 
-void ch8_GDELAY ();
-void ch8_KEY ();
-void ch8_SDELAY ();
-void ch8_SSOUND ();
-void ch8_ADI ();
-void ch8_FONT ();
-void ch8_XFONT ();
-void ch8_BCD ();
-void ch8_STR ();
-void ch8_LDR ();
-void ch8_STR_RPL ();
-void ch8_LDR_RPL ();
+void ch8_GDELAY ( OPCODE_ARGS );
+void ch8_KEY ( OPCODE_ARGS );
+void ch8_SDELAY ( OPCODE_ARGS );
+void ch8_SSOUND ( OPCODE_ARGS );
+void ch8_ADI ( OPCODE_ARGS );
+void ch8_FONT ( OPCODE_ARGS );
+void ch8_XFONT ( OPCODE_ARGS );
+void ch8_BCD ( OPCODE_ARGS );
+void ch8_STR ( OPCODE_ARGS );
+void ch8_LDR ( OPCODE_ARGS );
+void ch8_STR_RPL ( OPCODE_ARGS );
+void ch8_LDR_RPL ( OPCODE_ARGS );
 
 extern CH8_CALL CallTable[CH8_INSTR_COUNT+1];
 

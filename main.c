@@ -79,7 +79,14 @@ int main(int argc, char *argv[])
    	LLVMSetInitializer( rommem_var, LLVMConstStringInContext( context, (char*)rom_memory, fileLen, 1 ) );
 
    	LLVMValueRef romsize_var = LLVMGetNamedGlobal( module, "rom_memory_size" );
-   	LLVMSetInitializer( romsize_var, LLVMConstInt( LLVMInt16TypeInContext(context), fileLen, 0 ) );   	
+   	LLVMSetInitializer( romsize_var, LLVMConstInt( LLVMInt16TypeInContext(context), fileLen, 0 ) );
+
+
+   	LLVMTypeRef vmprog_type = LLVMFunctionType( LLVMVoidTypeInContext(context), NULL, 0, 0 );
+   	LLVMValueRef vmprog_func = LLVMAddFunction( module, "vm_program", vmprog_type );
+
+
+
    	
 	//LLVMDumpModule( module ); 
 
@@ -96,10 +103,12 @@ int main(int argc, char *argv[])
         LLVMDisposeMessage (err);
         return 1;
     }
-    
+
     const char * const main_func_args [] = {"ch8vm"};
     LLVMValueRef main_func = LLVMGetNamedFunction( module, "main");
 	LLVMRunFunctionAsMain( exec_engine, main_func, 1, main_func_args, NULL );
+
+	// LLVMRunFunction( exec_engine, vmprog_func, 0, NULL );
 
 	// Write to file
 	// if( LLVMVerifyModule( module, LLVMPrintMessageAction, NULL ) )
