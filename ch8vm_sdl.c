@@ -107,6 +107,7 @@ void ch8_OS_updatekeys( int *key )
         {
         case SDL_QUIT:
         	quit = 1;
+        	exit(1);
             break;
 
         case SDL_ACTIVEEVENT:
@@ -172,8 +173,9 @@ uint32_t ch8_OS_timediff(const struct timespec * end, const struct timespec * st
 	return ret;
 }
 
-void ch8_OS_tick( int *key )
+void ch8_OS_tick( /*int *key*/ )
 {
+	int key;
 	const uint32_t frame_time_cpu = 1000000/CH8_FPS;
     const uint32_t frame_time_60hz = 1000000/CH8_TIMER_HZ;
     const uint32_t frame_time_screen = 1000000/CH8_SCREEN_HZ;
@@ -209,20 +211,20 @@ void ch8_OS_tick( int *key )
 	}
 
 	// Should we be waiting for an event?
-	if( ch8_State->PausedOnKey != -1 || ch8_State->Paused )
+	while( ch8_State->PausedOnKey != -1 || ch8_State->Paused )
 	{
 		// Reduce FPS to a minimum
 		usleep( 1000000/CH8_PAUSED_FPS );
-	}else{
-
-	    // Wait until next frame
-	    clock_gettime(CLOCK_MONOTONIC, &ts_cur);
-		elapsed_cpu = ch8_OS_timediff( &ts_cur, &ts_last );
-		if( elapsed_cpu < frame_time_cpu )
-		{
-			usleep( frame_time_cpu-elapsed_cpu );
-		}
+		ch8_OS_updatekeys( &key );
 	}
+
+    // Wait until next frame
+    clock_gettime(CLOCK_MONOTONIC, &ts_cur);
+	elapsed_cpu = ch8_OS_timediff( &ts_cur, &ts_last );
+	if( elapsed_cpu < frame_time_cpu )
+	{
+		usleep( frame_time_cpu-elapsed_cpu );
+	}	
 
 	// New frame begins
 	clock_gettime(CLOCK_MONOTONIC, &ts_last);
@@ -235,18 +237,19 @@ void ch8_OS_tick( int *key )
 		ch8_VMTimerUpdate();
 	}	
 
-	ch8_OS_updatekeys( key );
+	
+	ch8_OS_updatekeys( &key );
 
 	// Instr will be called now
 }
 
 int ch8_OS_cputhread( void *data )
 {
-	int key;	
+	int key=0;
 
 	while( !quit )
     {
-    	ch8_OS_tick( &key );    	
+    	ch8_OS_tick( /*&key*/ );    	
 
     	// Execute VM step
     	ch8_VMStep( key );

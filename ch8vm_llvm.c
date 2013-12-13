@@ -93,7 +93,7 @@ void ch8_ll_RunJIT( )
 	char *err;
 	LLVMExecutionEngineRef exec_engine;
 
-	// LLVMValueRef call = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StartVM"), NULL, 0, "" );
+ // LLVMValueRef call = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StartVM"), NULL, 0, "" );
  //   	LLVMSetFunctionCallConv( call, LLVMCCallConv );
  //   	LLVMBuildRetVoid( builder );
 
@@ -140,7 +140,10 @@ void ch8_ll_AddOpcodeCall( const char* func_name, uint16_t param1, uint16_t para
    	op_arg[2] = LLVMConstInt( LLVMInt16TypeInContext(context), param3, 0 );
 
    	LLVMValueRef call = LLVMBuildCall( builder, LLVMGetNamedFunction(module, func_name), op_arg, 3, "" );
-   	LLVMSetFunctionCallConv( call, LLVMCCallConv );   	
+   	//LLVMSetFunctionCallConv( call, LLVMCCallConv );
+
+   	// After every opcode call, we need to check a few things
+   	LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_OS_tick"), NULL, 0, "" );
 }
 
 void ch8_ll_AddJump( uint16_t address )

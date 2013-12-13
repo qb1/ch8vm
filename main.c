@@ -51,10 +51,8 @@ int main(int argc, char *argv[])
 
 	ch8_ll_EndCompilation();
 
-	ch8_ll_DumpOnStdout( "check.dump" );
+	ch8_ll_DumpOnStdout( );
 	ch8_ll_RunJIT();
-
-	getchar();
 
     return 0;
 }

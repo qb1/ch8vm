@@ -392,7 +392,6 @@ void ch8_SPRITE ( OPCODE_ARGS )
 	}
 
 	ch8_OS_UpdateScreen( _V[_X], _V[_Y], 8, _Z );
-	ch8_OS_PrintScreen( _V[_X], _V[_Y], 8, _Z );
 }
 
 

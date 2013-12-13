@@ -64,6 +64,7 @@ void ch8_OS_Init();
 void ch8_OS_Start();
 void ch8_OS_Pause();
 void ch8_OS_Resume();
+void ch8_OS_tick();
 void ch8_OS_UpdateScreen();
 
 /* CH8 Instruction set */
