@@ -38,53 +38,20 @@ int main(int argc, char *argv[])
 	// Begin exp.
 	ch8_ll_Init( "ch8vmlib.bc", rom_memory, fileLen );
 	
-	ch8_ll_AddOpcodeCall( "ch8_CLS", 0, 0, 0 );
-	ch8_ll_AddOpcodeCall( "ch8_MVI", 0x248, 0, 0 );
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 0, 0, 0 );
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 1, 0x1E, 0 );
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0, 0 );
+	ch8_ll_AddOpcodeCall( "ch8_CLS", 0, 0, 0, 0x200 );
+	ch8_ll_AddOpcodeCall( "ch8_MVI", 0x248, 0, 0, 0x202 );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 0, 0, 0, 0x204 );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 1, 0x1E, 0, 0x206 );
+	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0, 0, 0x208 );
 
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2, 0x210 );
+	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2, 0x212 );
 
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
-
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
-
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
-
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
-
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
-
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
-
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
-
-	ch8_ll_AddOpcodeCall( "ch8_MOV_K", 2, 0x8, 0 );
-
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 0, 2 );
-	ch8_ll_AddOpcodeCall( "ch8_SPRITE", 2, 1, 2 );
+	ch8_ll_AddJump( 0x208 );
 
 	ch8_ll_EndCompilation();
+
+	ch8_ll_DumpOnStdout( "check.dump" );
 	ch8_ll_RunJIT();
 
 	getchar();
