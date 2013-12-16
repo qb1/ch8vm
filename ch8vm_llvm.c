@@ -74,8 +74,6 @@ void ch8_ll_Init( const char* module_filename, const uint8_t *memory, uint16_t m
    	args[0] = LLVMBuildGEP( builder, rommem_var, NULL, 0, "" ); 	// Retrieve pointer to global var
    	args[1] = LLVMConstInt( LLVMInt16TypeInContext(context), mem_size, 0 );
    	LLVMBuildCall( builder, LLVMGetNamedFunction( module, "ch8_InitVM"), args, 2, "" );
-
-   	ch8_ll_AddJump( 0x200, 0x010 );
 }
 
 void ch8_ll_DumpOnStdout( )
@@ -136,6 +134,14 @@ LLVMBasicBlockRef ch8_ll_appendBlock( uint16_t instr_addr )
 void ch8_ll_AddOpcodeCall( const char* func_name, uint16_t param1, uint16_t param2, uint16_t param3, uint16_t instr_addr )
 {	
     LLVMValueRef op_arg[3];
+
+    LLVMValueRef func = LLVMGetNamedFunction(module, func_name);
+
+    if( !func )
+    {
+    	printf("Trying to call unknown function %s! \n", func_name);
+    	return;
+    }
     
 	LLVMBasicBlockRef block = ch8_ll_appendBlock( instr_addr );   	
 
@@ -146,18 +152,38 @@ void ch8_ll_AddOpcodeCall( const char* func_name, uint16_t param1, uint16_t para
    	op_arg[1] = LLVMConstInt( LLVMInt16TypeInContext(context), param2, 0 );
    	op_arg[2] = LLVMConstInt( LLVMInt16TypeInContext(context), param3, 0 );
 
-   	LLVMValueRef call = LLVMBuildCall( builder, LLVMGetNamedFunction(module, func_name), op_arg, 3, "" );
-   	//LLVMSetFunctionCallConv( call, LLVMCCallConv );
+   	LLVMBuildCall( builder, func, op_arg, 3, "" );   	
 
    	// After every opcode call, we need to check a few things
    	LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_OS_tick"), NULL, 0, "" );
+
+   	ch8_ll_AddJumpIntoBlock( instr_addr+2);
+}
+
+void ch8_ll_AddJumpIntoBlock( uint16_t add_to )
+{
+    JumpCalls *jump = malloc( sizeof(JumpCalls) );
+
+    if( jump_list_begin == NULL )
+    {
+    	jump_list_begin = jump;
+    }
+    if( jump_list_end == NULL )
+    {
+    	jump_list_end = jump;
+    }else{
+    	jump_list_end->next = jump;
+    	jump_list_end = jump;
+    }
+
+    jump->block_from = LLVMGetInsertBlock(builder);
+    jump->address_to = add_to;
+    jump->next = NULL;
+    jump->type = 0;
 }
 
 void ch8_ll_AddJump( uint16_t add_to, uint16_t instr_addr )
 {
-	LLVMValueRef op_arg[3];
-    char block_name[20];
-
     JumpCalls *jump = malloc( sizeof(JumpCalls) );
 
     if( jump_list_begin == NULL )
@@ -176,13 +202,13 @@ void ch8_ll_AddJump( uint16_t add_to, uint16_t instr_addr )
     jump->address_to = add_to;
     jump->next = NULL;
     jump->type = 0;
+
+	LLVMPositionBuilderAtEnd( builder, jump->block_from );
+    LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_OS_tick"), NULL, 0, "" );
 }
 
 void ch8_ll_AddCondJump( LLVMValueRef value_if )
 {
-	LLVMValueRef op_arg[3];
-    char block_name[20];
-
     JumpCalls *jump = malloc( sizeof(JumpCalls) );
 
     if( jump_list_begin == NULL )
@@ -282,7 +308,7 @@ void ch8_ll_computeJumps()
 				printf( "Error: jump address 0x%X doesn't exist.\n", table_it->address_to );
 				continue;
 			}
-
+			
 			LLVMBuildBr( builder, jump_addrs[table_it->address_to] );
 		}else{			
 			LLVMBasicBlockRef next = LLVMGetNextBasicBlock(table_it->block_from);
@@ -302,10 +328,20 @@ void ch8_ll_computeJumps()
 		}		
 	}
 
-	// Make all blocks correct
+	// Force jump from entry to 0x200
 	LLVMBasicBlockRef block_it;
+	block_it = LLVMGetFirstBasicBlock(vmprog_func);
+	if( jump_addrs[0x200] == NULL )
+	{
+		printf( "Error: start jump address 0x200 doesn't exist.\n" );
+		return;
+	}
 
-	for( block_it = LLVMGetFirstBasicBlock(vmprog_func); block_it != NULL; 
+	LLVMPositionBuilderAtEnd( builder, block_it );
+	LLVMBuildBr( builder, jump_addrs[0x200] );
+
+	// Make all blocks correct
+	for( ; block_it != NULL; 
 		 block_it =  LLVMGetNextBasicBlock(block_it) )
 	{
 		if( LLVMGetBasicBlockTerminator( block_it ) == NULL )
@@ -316,7 +352,9 @@ void ch8_ll_computeJumps()
 			LLVMBasicBlockRef next =  LLVMGetNextBasicBlock(block_it);
 			if( next )
 			{			
-				LLVMBuildBr( builder, next );
+				//LLVMBuildBr( builder, next );
+				LLVMBuildRetVoid( builder );
+				printf( "fuck\n" );
 			}else{
 				// Last block
 				LLVMBuildRetVoid( builder );

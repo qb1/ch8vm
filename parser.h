@@ -68,6 +68,8 @@ typedef enum CH8_OPCODE
 	LDR_RPL,
 }CH8_OPCODE;
 
+extern const char* opcodeFuncNames[];
+
 #define CH8_INSTR_COUNT 43
 
 typedef struct
@@ -82,5 +84,6 @@ typedef struct
 
 int ch8p_read_opcode( uint16_t opcode, CH8_INSTR* instruction );
 void ch8p_print_instr( CH8_INSTR* instruction );
+void ch8p_decode_instr_llvm( CH8_INSTR* instr, uint16_t address );
 
 #endif // PARSER_H

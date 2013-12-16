@@ -68,13 +68,8 @@ unsigned char _ch8Font[] = {
 };
 
 CH8_STATE* ch8_State;
-
-// Will be manually created
-// static volatile uint8_t rom_memory[] = { 0x00 };
-// static volatile uint16_t rom_memory_size=1;
-
 static CH8_STATE global_state;
-// static CH8_INSTR global_instr;
+
 
 // int main()
 // {
@@ -139,23 +134,6 @@ void ch8_VMTimerUpdate()
 	}
 }
 
-void ch8_execInstr()
-{
-	CH8_INSTR instr;
- 	short opcode = ch8_State->M[ch8_State->PC] + ((short)ch8_State->M[ch8_State->PC+1] << 8);
-	ch8p_read_opcode( opcode, &instr );
-	printf( "%X,%X,%X: ", instr.param1, instr.param2, instr.param3 );
-	ch8p_print_instr( &instr );
-
-	if( instr.code != 0 )
-	{
-		ch8_State->PC += 2;
-		CallTable[instr.code]( instr.param1, instr.param2, instr.param3 );
-	}else{
-		printf( "Error : Trying to execute unrecognized opcode %X at %X\n", instr.code, ch8_State->PC );
-	}
-}
-
 void ch8_printState()
 {
 	printf( "\n\t- Current state: I=%.4X PC=%.4X", ch8_State->I, ch8_State->PC );
@@ -172,9 +150,15 @@ void ch8_printState()
    CHIP8 INSTRUCTIONS 
  **********************/
 
+void ch8_UNSUPP ( OPCODE_ARGS )
+{
+	printf( "Error: Calling unsupported function!\n" );
+	exit(1);
+}
+
 void ch8_SCDOWN ( OPCODE_ARGS )
 {
-	printf( "Error: ch8_SCDOWN not yet implemented\n" );	
+	printf( "Error: ch8_SCDOWN not yet implemented\n" );
 }
 
 void ch8_CLS ( OPCODE_ARGS )

@@ -1,16 +1,16 @@
 .SUFFIXES: .bc .c .o .h
 
 CC=clang
-CFLAGS=-c `llvm-config --cflags`
+CFLAGS=-c `llvm-config --cflags` -Wall
 LDFLAGS=`sdl-config --libs` `llvm-config --libs --cflags --ldflags all`
-SOURCES=main.c ch8vm_llvm.c
+SOURCES=main.c ch8vm_llvm.c parser.c
 DEPENDENCIES=parser.h ch8vm.h ch8vm_llvm.h
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=ch8vm
 
 BC_LNK=llvm-link
 BC_CFLAGS=-c `sdl-config --cflags`
-BC_SOURCES=parser.c ch8vm.c ch8vm_sdl.c
+BC_SOURCES=ch8vm.c ch8vm_sdl.c
 BC_OBJECTS=$(BC_SOURCES:.c=.bc)
 BC_TARGET=ch8vmlib.bc
 
