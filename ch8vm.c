@@ -83,6 +83,10 @@ static CH8_STATE global_state;
 
 // 	return 0;
 // }
+uint8_t ch8_StGetV( uint8_t reg )
+{
+	return _V[reg];
+}
 
 void ch8_InitVM( uint8_t *memory, uint16_t mem_size )
 {
@@ -170,12 +174,11 @@ void ch8_printState()
 
 void ch8_SCDOWN ( OPCODE_ARGS )
 {
-	// printf( "Error: ch8_SCDOWN not yet implemented\n" );	
+	printf( "Error: ch8_SCDOWN not yet implemented\n" );	
 }
 
 void ch8_CLS ( OPCODE_ARGS )
 {
-	printf( "CLS! %X %X %X\n", param1, param2, param3 );
 	memset( _Scr, 0, sizeof(_Scr) );
 	ch8_OS_UpdateScreen( 0, 0, CH8_SCREEN_WIDTH, CH8_SCREEN_HEIGHT );
 }

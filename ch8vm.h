@@ -59,6 +59,9 @@ void ch8_VMStep( int key );	// Must be called at CH8_FPS
 void ch8_VMTimerUpdate();	// Must be called at CH8_TIMER_HZ
 void ch8_printState( int x, int y, int w, int h );
 
+/* Helpers */
+uint8_t ch8_StGetV( uint8_t reg );
+
 /* OS specific */
 void ch8_OS_Init();
 void ch8_OS_Start();

@@ -75,7 +75,7 @@ void ch8_ll_Init( const char* module_filename, const uint8_t *memory, uint16_t m
    	args[1] = LLVMConstInt( LLVMInt16TypeInContext(context), mem_size, 0 );
    	LLVMBuildCall( builder, LLVMGetNamedFunction( module, "ch8_InitVM"), args, 2, "" );
 
-   	ch8_ll_AddJump( 0x200 );
+   	ch8_ll_AddJump( 0x200, 0x010 );
 }
 
 void ch8_ll_DumpOnStdout( )
@@ -121,16 +121,23 @@ void ch8_ll_RunPasses()
 	LLVMDisposePassManager( passmgr );
 }
 
-void ch8_ll_AddOpcodeCall( const char* func_name, uint16_t param1, uint16_t param2, uint16_t param3, uint16_t address )
+LLVMBasicBlockRef ch8_ll_appendBlock( uint16_t instr_addr )
+{
+	char block_name[20];
+
+	// Create its basic block
+    sprintf( block_name, "addr_0x%.4X", instr_addr );
+   	LLVMBasicBlockRef block = LLVMAppendBasicBlockInContext( context, vmprog_func, block_name );
+   	jump_addrs[instr_addr] = block;
+
+   	return block;
+}
+
+void ch8_ll_AddOpcodeCall( const char* func_name, uint16_t param1, uint16_t param2, uint16_t param3, uint16_t instr_addr )
 {	
     LLVMValueRef op_arg[3];
-    char block_name[20];
-
-    // Create its basic block
-    sprintf( block_name, "addr_0x%.4X", address );
-   	LLVMBasicBlockRef block = LLVMAppendBasicBlockInContext( context, vmprog_func, block_name );
-
-   	jump_addrs[address] = block;
+    
+	LLVMBasicBlockRef block = ch8_ll_appendBlock( instr_addr );   	
 
    	// Place the builder at the beginning of this new block
    	LLVMPositionBuilder (builder, block, LLVMGetFirstInstruction(block));   	
@@ -146,7 +153,7 @@ void ch8_ll_AddOpcodeCall( const char* func_name, uint16_t param1, uint16_t para
    	LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_OS_tick"), NULL, 0, "" );
 }
 
-void ch8_ll_AddJump( uint16_t address )
+void ch8_ll_AddJump( uint16_t add_to, uint16_t instr_addr )
 {
 	LLVMValueRef op_arg[3];
     char block_name[20];
@@ -161,12 +168,95 @@ void ch8_ll_AddJump( uint16_t address )
     {
     	jump_list_end = jump;
     }else{
-    	jump_list_end->next = jump;    	
+    	jump_list_end->next = jump;
+    	jump_list_end = jump;
+    }
+
+    jump->block_from = ch8_ll_appendBlock( instr_addr ); // A jump is its own instruction
+    jump->address_to = add_to;
+    jump->next = NULL;
+    jump->type = 0;
+}
+
+void ch8_ll_AddCondJump( LLVMValueRef value_if )
+{
+	LLVMValueRef op_arg[3];
+    char block_name[20];
+
+    JumpCalls *jump = malloc( sizeof(JumpCalls) );
+
+    if( jump_list_begin == NULL )
+    {
+    	jump_list_begin = jump;
+    }
+    if( jump_list_end == NULL )
+    {
+    	jump_list_end = jump;
+    }else{
+    	jump_list_end->next = jump;
+    	jump_list_end = jump;
     }
     
-    jump->block_from = LLVMGetInsertBlock( builder );
-    jump->address_to = address;
+    jump->block_from = LLVMGetInsertBlock(builder);	// A cond jump is part of a longer instruction block
+    jump->value_if = value_if;	
     jump->next = NULL;
+    jump->type = 1;
+}
+
+void ch8_ll_AddCondEqV( uint8_t reg1, uint8_t value, uint16_t instr_addr )
+{
+	LLVMBasicBlockRef block = ch8_ll_appendBlock( instr_addr );
+	LLVMPositionBuilder (builder, block, LLVMGetFirstInstruction(block));
+
+	LLVMValueRef arg = LLVMConstInt( LLVMInt8TypeInContext(context), reg1, 0 );	
+	LLVMValueRef get_reg = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StGetV"), &arg, 1, "" );
+	LLVMValueRef cst_value = LLVMConstInt( LLVMInt8TypeInContext(context), value, 0 );
+
+	LLVMValueRef value_if = LLVMBuildICmp( builder, LLVMIntEQ, get_reg, cst_value, "" );
+	ch8_ll_AddCondJump( value_if );
+}
+
+void ch8_ll_AddCondNEqV( uint8_t reg1, uint8_t value, uint16_t instr_addr )
+{
+	LLVMBasicBlockRef block = ch8_ll_appendBlock( instr_addr );
+	LLVMPositionBuilder (builder, block, LLVMGetFirstInstruction(block));
+
+	LLVMValueRef arg = LLVMConstInt( LLVMInt8TypeInContext(context), reg1, 0 );	
+	LLVMValueRef get_reg = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StGetV"), &arg, 1, "" );
+	LLVMValueRef cst_value = LLVMConstInt( LLVMInt8TypeInContext(context), value, 0 );
+
+	LLVMValueRef value_if = LLVMBuildICmp( builder, LLVMIntNE, get_reg, cst_value, "" );
+	ch8_ll_AddCondJump( value_if );
+}
+
+void ch8_ll_AddCondEq( uint8_t reg1, uint8_t reg2, uint16_t instr_addr )
+{
+	LLVMBasicBlockRef block = ch8_ll_appendBlock( instr_addr );
+	LLVMPositionBuilder (builder, block, LLVMGetFirstInstruction(block));
+
+	LLVMValueRef arg = LLVMConstInt( LLVMInt8TypeInContext(context), reg1, 0 );
+	LLVMValueRef get_reg1 = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StGetV"), &arg, 1, "" );
+
+	arg = LLVMConstInt( LLVMInt8TypeInContext(context), reg2, 0 );
+	LLVMValueRef get_reg2 = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StGetV"), &arg, 1, "" );
+
+	LLVMValueRef value_if = LLVMBuildICmp( builder, LLVMIntEQ, get_reg1, get_reg2, "" );
+	ch8_ll_AddCondJump( value_if );
+}
+
+void ch8_ll_AddCondNEq( uint8_t reg1, uint8_t reg2, uint16_t instr_addr )
+{
+	LLVMBasicBlockRef block = ch8_ll_appendBlock( instr_addr );
+	LLVMPositionBuilder (builder, block, LLVMGetFirstInstruction(block));
+
+	LLVMValueRef arg = LLVMConstInt( LLVMInt8TypeInContext(context), reg1, 0 );
+	LLVMValueRef get_reg1 = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StGetV"), &arg, 1, "" );
+
+	arg = LLVMConstInt( LLVMInt8TypeInContext(context), reg2, 0 );
+	LLVMValueRef get_reg2 = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StGetV"), &arg, 1, "" );
+
+	LLVMValueRef value_if = LLVMBuildICmp( builder, LLVMIntNE, get_reg1, get_reg2, "" );
+	ch8_ll_AddCondJump( value_if );
 }
 
 void ch8_ll_EndCompilation()
@@ -183,15 +273,33 @@ void ch8_ll_computeJumps()
 	// Compute specifed jumps
 	for( table_it = jump_list_begin; table_it != NULL; table_it = table_it->next )
 	{
-		if( jump_addrs[table_it->address_to] == NULL )
+		LLVMPositionBuilderAtEnd( builder, table_it->block_from );
+
+		if( table_it->type == 0 )
 		{
-			printf( "Error: jump address 0x%X doesn't exist.\n", table_it->address_to );
-			continue;
-		}
+			if( jump_addrs[table_it->address_to] == NULL )
+			{
+				printf( "Error: jump address 0x%X doesn't exist.\n", table_it->address_to );
+				continue;
+			}
 
-		 LLVMPositionBuilderAtEnd( builder, table_it->block_from );
+			LLVMBuildBr( builder, jump_addrs[table_it->address_to] );
+		}else{			
+			LLVMBasicBlockRef next = LLVMGetNextBasicBlock(table_it->block_from);
+			LLVMBasicBlockRef nextnext = LLVMGetNextBasicBlock(next);
 
-		LLVMBuildBr( builder, jump_addrs[table_it->address_to] );
+			if( next == NULL || nextnext == NULL )
+			{
+				LLVMDumpValue( LLVMBasicBlockAsValue(table_it->block_from) );
+				LLVMDumpValue( LLVMBasicBlockAsValue(next) );
+				LLVMDumpValue( LLVMBasicBlockAsValue(nextnext) );
+				printf( "Error: cond jump is not followed by two valid blocks\n" );
+				continue;
+			}
+
+			//LLVMBuildBr( builder, next );
+			LLVMBuildCondBr( builder, table_it->value_if, nextnext, next );
+		}		
 	}
 
 	// Make all blocks correct
@@ -202,12 +310,12 @@ void ch8_ll_computeJumps()
 	{
 		if( LLVMGetBasicBlockTerminator( block_it ) == NULL )
 		{
+			LLVMPositionBuilderAtEnd( builder, block_it );
+
 			// No terminator specified: add a jump to next block
 			LLVMBasicBlockRef next =  LLVMGetNextBasicBlock(block_it);
-
 			if( next )
-			{
-				LLVMPositionBuilderAtEnd( builder, block_it );
+			{			
 				LLVMBuildBr( builder, next );
 			}else{
 				// Last block
