@@ -91,10 +91,6 @@ void ch8_ll_RunJIT( )
 	char *err;
 	LLVMExecutionEngineRef exec_engine;
 
- // LLVMValueRef call = LLVMBuildCall( builder, LLVMGetNamedFunction(module, "ch8_StartVM"), NULL, 0, "" );
- //   	LLVMSetFunctionCallConv( call, LLVMCCallConv );
- //   	LLVMBuildRetVoid( builder );
-
 	LLVMVerifyModule( module, LLVMPrintMessageAction, NULL );
 
 	// Call the VM
@@ -123,7 +119,6 @@ LLVMBasicBlockRef ch8_ll_appendBlock( uint16_t instr_addr )
 {
 	char block_name[20];
 
-	// Create its basic block
     sprintf( block_name, "addr_0x%.4X", instr_addr );
    	LLVMBasicBlockRef block = LLVMAppendBasicBlockInContext( context, vmprog_func, block_name );
    	jump_addrs[instr_addr] = block;
@@ -303,7 +298,7 @@ void ch8_ll_computeJumps()
 
 		if( table_it->type == 0 )
 		{
-			if( jump_addrs[table_it->address_to] == NULL )
+			if( table_it->address_to >= sizeof(jump_addrs)/sizeof(*jump_addrs) || jump_addrs[table_it->address_to] == NULL )
 			{
 				printf( "Error: jump address 0x%X doesn't exist.\n", table_it->address_to );
 				continue;
@@ -311,14 +306,17 @@ void ch8_ll_computeJumps()
 			
 			LLVMBuildBr( builder, jump_addrs[table_it->address_to] );
 		}else{			
-			LLVMBasicBlockRef next = LLVMGetNextBasicBlock(table_it->block_from);
-			LLVMBasicBlockRef nextnext = LLVMGetNextBasicBlock(next);
+			LLVMBasicBlockRef next, nextnext;
+
+			next = LLVMGetNextBasicBlock(table_it->block_from);
+
+			if( next )
+			{
+				nextnext = LLVMGetNextBasicBlock(next);
+			}
 
 			if( next == NULL || nextnext == NULL )
 			{
-				LLVMDumpValue( LLVMBasicBlockAsValue(table_it->block_from) );
-				LLVMDumpValue( LLVMBasicBlockAsValue(next) );
-				LLVMDumpValue( LLVMBasicBlockAsValue(nextnext) );
 				printf( "Error: cond jump is not followed by two valid blocks\n" );
 				continue;
 			}
@@ -341,8 +339,7 @@ void ch8_ll_computeJumps()
 	LLVMBuildBr( builder, jump_addrs[0x200] );
 
 	// Make all blocks correct
-	for( ; block_it != NULL; 
-		 block_it =  LLVMGetNextBasicBlock(block_it) )
+	for( ; block_it != NULL; block_it =  LLVMGetNextBasicBlock(block_it) )
 	{
 		if( LLVMGetBasicBlockTerminator( block_it ) == NULL )
 		{
@@ -360,5 +357,5 @@ void ch8_ll_computeJumps()
 				LLVMBuildRetVoid( builder );
 			}
 		}
-	}
+	}	
 }
